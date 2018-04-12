@@ -1,3 +1,104 @@
+/*! @vimeo/player v2.5.0 | (c) 2018 Vimeo | MIT License | https://github.com/vimeo/player.js */
+/**
+ * @module lib/functions
+ */
+
+/**
+ * Check to see this is a node environment.
+ * @type {Boolean}
+ */
+/* global global */
+var isNode = typeof global !== 'undefined' && {}.toString.call(global) === '[object global]';
+
+/**
+ * Get the name of the method for a given getter or setter.
+ *
+ * @param {string} prop The name of the property.
+ * @param {string} type Either “get” or “set”.
+ * @return {string}
+ */
+function getMethodName(prop, type) {
+    if (prop.indexOf(type.toLowerCase()) === 0) {
+        return prop;
+    }
+
+    return '' + type.toLowerCase() + prop.substr(0, 1).toUpperCase() + prop.substr(1);
+}
+
+/**
+ * Check to see if the object is a DOM Element.
+ *
+ * @param {*} element The object to check.
+ * @return {boolean}
+ */
+function isDomElement(element) {
+    return element instanceof window.HTMLElement;
+}
+
+/**
+ * Check to see whether the value is a number.
+ *
+ * @see http://dl.dropboxusercontent.com/u/35146/js/tests/isNumber.html
+ * @param {*} value The value to check.
+ * @param {boolean} integer Check if the value is an integer.
+ * @return {boolean}
+ */
+function isInteger(value) {
+    // eslint-disable-next-line eqeqeq
+    return !isNaN(parseFloat(value)) && isFinite(value) && Math.floor(value) == value;
+}
+
+/**
+ * Check to see if the URL is a Vimeo url.
+ *
+ * @param {string} url The url string.
+ * @return {boolean}
+ */
+function isVimeoUrl(url) {
+    return (/^(https?:)?\/\/((player|www).)?vimeo.com(?=$|\/)/.test(url)
+    );
+}
+
+/**
+ * Get the Vimeo URL from an element.
+ * The element must have either a data-vimeo-id or data-vimeo-url attribute.
+ *
+ * @param {object} oEmbedParameters The oEmbed parameters.
+ * @return {string}
+ */
+function getVimeoUrl() {
+    var oEmbedParameters = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    var id = oEmbedParameters.id;
+    var url = oEmbedParameters.url;
+    var idOrUrl = id || url;
+
+    if (!idOrUrl) {
+        throw new Error('An id or url must be passed, either in an options object or as a data-vimeo-id or data-vimeo-url attribute.');
+    }
+
+    if (isInteger(idOrUrl)) {
+        return 'https://vimeo.com/' + idOrUrl;
+    }
+
+    if (isVimeoUrl(idOrUrl)) {
+        return idOrUrl.replace('http:', 'https:');
+    }
+
+    if (id) {
+        throw new TypeError('\u201C' + id + '\u201D is not a valid video id.');
+    }
+
+    throw new TypeError('\u201C' + idOrUrl + '\u201D is not a vimeo.com url.');
+}
+
+var arrayIndexOfSupport = typeof Array.prototype.indexOf !== 'undefined';
+var postMessageSupport = typeof window !== 'undefined' && typeof window.postMessage !== 'undefined';
+
+if (!isNode && (!arrayIndexOfSupport || !postMessageSupport)) {
+    throw new Error('Sorry, the Vimeo Player API is not available in this browser.');
+}
+
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 
@@ -8,30 +109,7 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-var player = createCommonjsModule(function (module, exports) {
-/*! @vimeo/player v2.2.0 | (c) 2017 Vimeo | MIT License | https://github.com/vimeo/player.js */
-(function (global, factory) {
-	module.exports = factory();
-}(commonjsGlobal, (function () { 'use strict';
-
-var arrayIndexOfSupport = typeof Array.prototype.indexOf !== 'undefined';
-var postMessageSupport = typeof window.postMessage !== 'undefined';
-
-if (!arrayIndexOfSupport || !postMessageSupport) {
-    throw new Error('Sorry, the Vimeo Player API is not available in this browser.');
-}
-
-var commonjsGlobal$$1 = typeof window !== 'undefined' ? window : typeof commonjsGlobal !== 'undefined' ? commonjsGlobal : typeof self !== 'undefined' ? self : {};
-
-
-
-
-
-function createCommonjsModule$$1(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var index = createCommonjsModule$$1(function (module, exports) {
+var index = createCommonjsModule(function (module, exports) {
 (function (exports) {
   'use strict';
   //shared pointer
@@ -254,10 +332,10 @@ var index = createCommonjsModule$$1(function (module, exports) {
       callback.call(context, r.value[1], r.value[0], this);
     }
   }
-})('object' != 'undefined' && typeof commonjsGlobal$$1 != 'undefined' ? commonjsGlobal$$1 : window);
+})('object' != 'undefined' && typeof commonjsGlobal != 'undefined' ? commonjsGlobal : window);
 });
 
-var npo_src = createCommonjsModule$$1(function (module) {
+var npo_src = createCommonjsModule(function (module) {
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 /*! Native Promise Only
@@ -275,7 +353,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			return context[name];
 		});
 	}
-})("Promise", typeof commonjsGlobal$$1 != "undefined" ? commonjsGlobal$$1 : commonjsGlobal$$1, function DEF() {
+})("Promise", typeof commonjsGlobal != "undefined" ? commonjsGlobal : commonjsGlobal, function DEF() {
 	/*jshint validthis:true */
 	"use strict";
 
@@ -726,96 +804,10 @@ function swapCallbacks(oldElement, newElement) {
 }
 
 /**
- * @module lib/functions
- */
-
-/**
- * Get the name of the method for a given getter or setter.
- *
- * @param {string} prop The name of the property.
- * @param {string} type Either “get” or “set”.
- * @return {string}
- */
-function getMethodName(prop, type) {
-    if (prop.indexOf(type.toLowerCase()) === 0) {
-        return prop;
-    }
-
-    return '' + type.toLowerCase() + prop.substr(0, 1).toUpperCase() + prop.substr(1);
-}
-
-/**
- * Check to see if the object is a DOM Element.
- *
- * @param {*} element The object to check.
- * @return {boolean}
- */
-function isDomElement(element) {
-    return element instanceof window.HTMLElement;
-}
-
-/**
- * Check to see whether the value is a number.
- *
- * @see http://dl.dropboxusercontent.com/u/35146/js/tests/isNumber.html
- * @param {*} value The value to check.
- * @param {boolean} integer Check if the value is an integer.
- * @return {boolean}
- */
-function isInteger(value) {
-    // eslint-disable-next-line eqeqeq
-    return !isNaN(parseFloat(value)) && isFinite(value) && Math.floor(value) == value;
-}
-
-/**
- * Check to see if the URL is a Vimeo url.
- *
- * @param {string} url The url string.
- * @return {boolean}
- */
-function isVimeoUrl(url) {
-    return (/^(https?:)?\/\/((player|www).)?vimeo.com(?=$|\/)/.test(url)
-    );
-}
-
-/**
- * Get the Vimeo URL from an element.
- * The element must have either a data-vimeo-id or data-vimeo-url attribute.
- *
- * @param {object} oEmbedParameters The oEmbed parameters.
- * @return {string}
- */
-function getVimeoUrl() {
-    var oEmbedParameters = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    var id = oEmbedParameters.id;
-    var url = oEmbedParameters.url;
-    var idOrUrl = id || url;
-
-    if (!idOrUrl) {
-        throw new Error('An id or url must be passed, either in an options object or as a data-vimeo-id or data-vimeo-url attribute.');
-    }
-
-    if (isInteger(idOrUrl)) {
-        return 'https://vimeo.com/' + idOrUrl;
-    }
-
-    if (isVimeoUrl(idOrUrl)) {
-        return idOrUrl.replace('http:', 'https:');
-    }
-
-    if (id) {
-        throw new TypeError('\u201C' + id + '\u201D is not a valid video id.');
-    }
-
-    throw new TypeError('\u201C' + idOrUrl + '\u201D is not a vimeo.com url.');
-}
-
-/**
  * @module lib/embed
  */
 
-var oEmbedParameters = ['id', 'url', 'width', 'maxwidth', 'height', 'maxheight', 'portrait', 'title', 'byline', 'color', 'autoplay', 'autopause', 'loop', 'responsive', 'speed'];
+var oEmbedParameters = ['autopause', 'autoplay', 'background', 'byline', 'color', 'height', 'id', 'loop', 'maxheight', 'maxwidth', 'muted', 'playsinline', 'portrait', 'responsive', 'speed', 'title', 'transparent', 'url', 'width'];
 
 /**
  * Get the 'data-vimeo'-prefixed attributes from an element as an object.
@@ -1128,7 +1120,7 @@ var Player = function () {
         }
 
         // Find an element by ID
-        if (typeof element === 'string') {
+        if (typeof document !== 'undefined' && typeof element === 'string') {
             element = document.getElementById(element);
         }
 
@@ -1194,7 +1186,10 @@ var Player = function () {
 
                 getOEmbedData(url, params).then(function (data) {
                     var iframe = createEmbed(data, element);
+                    // Overwrite element with the new iframe,
+                    // but store reference to the original element
                     _this.element = iframe;
+                    _this._originalElement = element;
 
                     swapCallbacks(element, iframe);
                     playerMap.set(_this.element, _this);
@@ -1246,6 +1241,8 @@ var Player = function () {
                     });
 
                     postMessage(_this2, name, args);
+                }).catch(function (error) {
+                    reject(error);
                 });
             });
         }
@@ -1420,7 +1417,9 @@ var Player = function () {
     }, {
         key: 'ready',
         value: function ready() {
-            var readyPromise = readyMap.get(this);
+            var readyPromise = readyMap.get(this) || new npo_src(function (resolve, reject) {
+                reject('Unknown player. Probably unloaded.');
+            });
             return npo_src.resolve(readyPromise);
         }
 
@@ -1589,6 +1588,34 @@ var Player = function () {
         key: 'unload',
         value: function unload() {
             return this.callMethod('unload');
+        }
+
+        /**
+         * Cleanup the player and remove it from the DOM
+         *
+         * It won't be usable and a new one should be constructed
+         *  in order to do any operations.
+         *
+         * @return {Promise}
+         */
+
+    }, {
+        key: 'destroy',
+        value: function destroy() {
+            var _this5 = this;
+
+            return new npo_src(function (resolve) {
+                readyMap.delete(_this5);
+                playerMap.delete(_this5.element);
+                if (_this5._originalElement) {
+                    playerMap.delete(_this5._originalElement);
+                    _this5._originalElement.removeAttribute('data-vimeo-initialized');
+                }
+                if (_this5.element && _this5.element.nodeName === 'IFRAME') {
+                    _this5.element.remove();
+                }
+                resolve();
+            });
         }
 
         /**
@@ -2068,15 +2095,10 @@ var Player = function () {
     return Player;
 }();
 
-initializeEmbeds();
-resizeEmbeds();
-
-return Player;
-
-})));
-
-
-});
+if (!isNode) {
+    initializeEmbeds();
+    resizeEmbeds();
+}
 
 var pid = 0;
 
@@ -2174,7 +2196,7 @@ var vueVimeoPlayer = {
       autoplay: this.autoplay
     };
 
-    this.player = new player(this.elementId, Object.assign(options, this.options));
+    this.player = new Player(this.elementId, Object.assign(options, this.options));
 
     this.setEvents();
   },
